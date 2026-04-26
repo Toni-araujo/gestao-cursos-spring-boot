@@ -17,9 +17,9 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.ignoringRequestMatchers("/courses/favorite/**"))
 
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/courses", "/courses/*", "/login", "/login/add").permitAll()
+                        .requestMatchers("/courses/add/**", "/courses/edit/**", "/courses/delete/**").hasRole("ADMIN")
                         .requestMatchers("/courses/favorite/**", "/courses/favorites").authenticated()
-                        .requestMatchers("/courses/add", "/courses/edit/**", "/courses/delete/**").hasRole("ADMIN")
+                        .requestMatchers("/", "/courses", "/login", "/login/add", "/css/**", "/js/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
