@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>Sistema de Cursos - IFPB</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+    <style>
+        /* Cores base */
+        :root { --fav-color: #ff4757; --inactive-color: #ced4da; }
+
+        /* Botão de Favorito */
+        .fav-btn { cursor: pointer; border: none; background: none; transition: transform 0.2s; }
+        .fav-btn:hover { transform: scale(1.3); }
+        .fav-active { color: var(--fav-color); }
+        .fav-inactive { color: var(--inactive-color); }
+        .table-v-align td { vertical-align: middle; }
+
+        /* 1. O Fundo Gradiente (Apenas Logados) */
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+        }
+        .table-responsive, .card {
+            background-color: white !important;
+            border-radius: 10px;
+        }
+
+        /* 2. Animação de Entrada (Fade In Up) */
+        @keyframes slideUpFade {
+            0% { opacity: 0; transform: translateY(30px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        .entrada-animada {
+            animation: slideUpFade 0.6s ease-out forwards;
+            opacity: 0; /* Garante que fique invisível antes da animação começar */
+        }
+
+        /* 3. Efeito Interativo nas Linhas da Tabela */
+        .table-hover tbody tr {
+            transition: all 0.2s ease-in-out;
+        }
+        .table-hover tbody tr:hover {
+            transform: scale(1.01); /* Leve zoom */
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1); /* Sombra flutuante */
+            z-index: 10;
+            position: relative;
+            background-color: #ffffff !important;
+            border-radius: 8px;
+        }
+
+        /* 4. O Badge de Promoção Pulsante */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        .promo-badge {
+            animation: pulse 1.5s infinite;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body class="container mt-4">
+
+<div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">
+    <a href="/" class="btn btn-link text-decoration-none p-0 text-dark">
+        <i class="fas fa-home"></i> <strong>Home</strong>
+    </a>
+    <span class="text-muted small">
+        <i class="fas fa-university"></i> IFPB - Sistema de Gestão Acadêmica
+    </span>
+</div>
+
+<div class="row mb-4 entrada-animada">
+    <div class="col-md-6">
+        <h1 class="display-6"><i class="fas fa-graduation-cap text-primary"></i> Cursos Disponíveis</h1>
+    </div>
+    <div class="col-md-6 text-md-end">
+        <div sec:authorize="isAuthenticated()" class="card d-inline-block border-0 shadow-sm">
+            <div class="card-body py-2 px-3">
+                <span class="me-2">Olá, <strong sec:authentication="name" class="text-primary"></strong>!</span>
+                <a href="/courses/favorites" class="btn btn-sm btn-outline-warning">
+                    <i class="fas fa-star"></i> Meus Favoritos
+                </a>
+                <form th:action="@{/logout}" method="post" class="d-inline ms-2">
+                    <button type="submit" class="btn btn-sm btn-danger">Sair</button>
+                </form>
+            </div>
+        </div>
+        <div sec:authorize="isAnonymous()">
+            <a href="/login" class="btn btn-success"><i class="fas fa-sign-in-alt"></i> Entrar no Sistema</a>
+        </div>
+    </div>
+</div>
+
+<div class="d-flex justify-content-between align-items-center mb-3 entrada-animada" style="animation-delay: 0.1s;">
+    <div>
+        <div sec:authorize="hasRole('ADMIN')">
+            <a href="/courses/add" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Novo Curso
+            </a>
+        </div>
+    </div>
+    <div class="text-muted">
+        <i class="fas fa-list-ol"></i> Total: <span th:text="${courses.size()}" class="fw-bold">0</span> cursos
+    </div>
+</div>
+
+<div class="input-group mb-4 shadow-sm entrada-animada" style="animation-delay: 0.15s;">
+    <span class="input-group-text bg-white border-end-0"><i class="fas fa-search text-muted"></i></span>
+    <input type="text" id="searchInput" class="form-control border-start-0" placeholder="Pesquisar curso por nome...">
+</div>
+
+<div class="table-responsive shadow-sm rounded entrada-animada" style="animation-delay: 0.2s;">
+    <table class="table table-hover table-v-align bg-white" id="coursesTable">
+        <thead class="table-dark">
+        <tr>
+            <th sec:authorize="isAuthenticated()" class="text-center" style="width: 50px;">⭐</th>
+            <th>ID</th>
+            <th>Curso</th>
+            <th>Duração</th>
+            <th>Investimento</th>
+            <th>Lançamento</th>
+            <th sec:authorize="hasRole('ADMIN')" class="text-center">Ações</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="course : ${courses}">
+            <td sec:authorize="isAuthenticated()" class="text-center">
+                <form th:action="@{/courses/favorite/{id}(id=${course.id})}" method="post">
+                    <button type="submit" class="fav-btn" title="Alternar Favorito">
+                        <i class="fas fa-heart" th:classappend="${course.favorited ? 'fav-active' : 'fav-inactive'}"></i>
+                    </button>
+                </form>
+            </td>
+
+            <td th:text="${course.id}" class="text-muted small">#</td>
+
+            <td>
+                <a th:href="@{/courses/{id}(id=${course.id})}" class="fw-bold text-decoration-none text-primary" title="Ver detalhes e comentários">
+                    <i class="fas fa-link"></i> <span th:text="${course.name}">Nome do Curso</span>
+                </a>
+                <div class="small text-muted" th:text="${course.description}">Descrição</div>
+            </td>
+
+            <td>
+                <span class="badge bg-light text-dark border">
+                    <i class="far fa-clock"></i> <span th:text="${course.duration}">0</span>h
+                </span>
+            </td>
+
+            <td>
+                <div sec:authorize="isAuthenticated()">
+                    <span class="text-decoration-line-through text-muted small" th:text="'R$ ' + ${#numbers.formatDecimal(course.price, 1, 2)}"></span>
+                    <div class="fw-bold text-success">
+                        R$ <span th:text="${#numbers.formatDecimal(course.price * 0.9, 1, 2)}"></span>
+                        <span class="badge bg-success-subtle text-success border-success-subtle ms-1">-10%</span>
+                    </div>
+                </div>
+                <div sec:authorize="isAnonymous()">
+                    <span class="fw-bold text-primary">R$ <span th:text="${#numbers.formatDecimal(course.price, 1, 2)}"></span></span>
+                    <span th:if="${course.price < 400}" class="badge bg-warning text-dark ms-1 promo-badge">OFERTA</span>
+                </div>
+            </td>
+
+            <td th:text="${#temporals.format(course.releaseDate, 'dd/MM/yyyy')}">00/00/0000</td>
+
+            <td sec:authorize="hasRole('ADMIN')" class="text-center">
+                <div class="btn-group">
+                    <a th:href="@{/courses/edit/{id}(id=${course.id})}" class="btn btn-sm btn-outline-warning" title="Editar">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                    <button class="btn btn-sm btn-outline-danger"
+                            data-bs-toggle="modal"
+                            data-bs-target="#confirmModal"
+                            th:data-id="${course.id}"
+                            th:data-name="${course.name}">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+<div class="mt-4 mb-5">
+    <a href="/" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Voltar ao Menu
+    </a>
+</div>
+
+<div class="modal fade" id="confirmModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title"><i class="fas fa-exclamation-triangle"></i> Atenção!</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Você está prestes a excluir o curso: <strong id="courseNameModal"></strong>.</p>
+                <p class="text-muted small">Esta ação não poderá ser desfeita após a confirmação.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                <a id="confirmDeleteLink" href="#" class="btn btn-danger">Confirmar Exclusão</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    document.getElementById('searchInput').addEventListener('keyup', function() {
+        let filter = this.value.toLowerCase();
+        let rows = document.querySelectorAll('#coursesTable tbody tr');
+        rows.forEach(row => {
+            let text = row.innerText.toLowerCase();
+            row.style.display = text.includes(filter) ? '' : 'none';
+        });
+    });
+
+    const confirmModal = document.getElementById('confirmModal');
+    confirmModal.addEventListener('show.bs.modal', function (event) {
+        const button = event.relatedTarget;
+        const id = button.getAttribute('data-id');
+        const name = button.getAttribute('data-name');
+
+        document.getElementById('courseNameModal').textContent = name;
+        document.getElementById('confirmDeleteLink').href = '/courses/delete/' + id;
+    });
+</script>
+</body>
+</html>

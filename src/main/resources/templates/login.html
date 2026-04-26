@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Login - Sistema de Cursos</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+    <style>
+        /* O gradiente de fundo */
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            /* Flexbox para centralizar o cartão de login perfeitamente no meio da tela */
+            display: flex;
+            align-items: center;
+        }
+
+        /* 1. Definindo a "Timeline" da animação */
+        @keyframes slideUpFade {
+            0% {
+                opacity: 0; /* Começa invisível */
+                transform: translateY(40px); /* Começa 40 pixels mais para baixo */
+            }
+            100% {
+                opacity: 1; /* Termina totalmente visível */
+                transform: translateY(0); /* Termina na posição original */
+            }
+        }
+
+        /* 2. Criando a classe para aplicar no elemento */
+        .entrada-animada {
+            /* Chama a animação, dura 0.8 segundos, começa rápido e freia suave (ease-out) */
+            animation: slideUpFade 0.8s ease-out forwards;
+        }
+    </style>
+</head>
+<body class="container">
+<div class="row justify-content-center w-100">
+    <div class="col-md-5">
+
+        <div class="card shadow-lg border-0 entrada-animada">
+            <div class="card-header bg-primary text-white text-center py-3">
+                <h3 class="mb-0"><i class="fas fa-sign-in-alt"></i> Acesso Restrito</h3>
+            </div>
+            <div class="card-body p-4">
+                <div th:if="${param.error}" class="alert alert-danger shadow-sm">
+                    <i class="fas fa-exclamation-circle"></i> Usuário ou senha inválidos
+                </div>
+                <div th:if="${param.logout}" class="alert alert-info shadow-sm">
+                    <i class="fas fa-check-circle"></i> Você saiu do sistema
+                </div>
+
+                <form th:action="@{/login}" method="post">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-muted">Usuário:</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-user"></i></span>
+                            <input type="text" name="username" class="form-control" required placeholder="Digite seu usuário">
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label fw-bold text-muted">Senha:</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                            <input type="password" name="password" class="form-control" required placeholder="Digite sua senha">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 py-2 fw-bold">
+                        <i class="fas fa-paper-plane"></i> Entrar
+                    </button>
+                </form>
+
+                <hr class="my-4">
+
+                <div class="text-center">
+                    <span class="text-muted small">Ainda não tem conta?</span><br>
+                    <a href="/login/add" class="btn btn-outline-secondary w-100 mt-2">
+                        <i class="fas fa-user-plus"></i> Cadastrar novo usuário
+                    </a>
+                </div>
+
+                <div class="text-center mt-3">
+                    <a href="/" class="text-decoration-none text-muted small">
+                        <i class="fas fa-arrow-left"></i> Voltar ao menu principal
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+</body>
+</html>
